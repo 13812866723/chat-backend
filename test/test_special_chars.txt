@@ -1,0 +1,7 @@
+【系统配置参数说明】
+在配置环境变量时，请务必注意以下格式：
+- 数据库连接字符串格式为：mysql://user:password@localhost:3306/db
+- JSON 配置示例：{"api_key": "sk-12345", "timeout": 30}
+- 正则表达式参考：^\d{3}-\d{4}$
+
+注意：如果配置文件中包含 { 或 } 符号，LangChain 的 PromptTemplate 可能会将其误认为变量占位符，导致 ValueError。请确保在注入前进行转义处理。

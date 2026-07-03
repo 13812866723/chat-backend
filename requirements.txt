@@ -1,0 +1,35 @@
+# Web 框架
+fastapi>=0.110.0
+uvicorn>=0.29.0
+python-multipart>=0.0.9
+
+# 数据库
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9          # SQLAlchemy 经 postgresql:// 连接 PG（默认走 psycopg2）
+psycopg[binary]>=3.1.0          # LangGraph AsyncPostgresSaver 需要 psycopg3
+langgraph-checkpoint-postgres>=2.0.0
+
+# 认证与安全
+python-dotenv>=1.0.0
+passlib>=1.7.4
+bcrypt>=4.0.0                   # passlib 的 bcrypt 后端，passlib 本身不含
+PyJWT>=2.8.0
+
+# HTTP 请求
+requests>=2.31.0
+
+# LangChain 生态
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-openai>=0.3.0
+langchain-chroma>=0.2.0
+langchain-community>=0.3.0
+langchain-text-splitters>=0.3.0
+langchain-tavily>=0.1.0
+
+# LangGraph（任务编排 / 短期记忆）
+langgraph>=0.2.0
+
+# 文档处理
+docx2txt>=0.8
+unstructured>=0.13.0            # api/upload.py 的 UnstructuredWordDocumentLoader 需要
