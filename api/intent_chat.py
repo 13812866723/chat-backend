@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from config.database import get_db
 from config.security import get_current_user, TokenData
-from services.intent_recognition import get_intent_recognizer, intent_router
+from services.intent_recognition import get_intent_recognizer
 from providers.factory import get_llm_provider
 from rag.service import get_rag_service
 from crud.chat import create_message, get_conversation_by_id, get_conversation_messages, update_conversation_time, update_conversation_title
@@ -12,109 +12,6 @@ from fastapi.responses import StreamingResponse
 import json
 
 router = APIRouter(prefix="/chat", tags=["Intent Chat"])
-
-
-# 注册意图处理器
-@intent_router.register("rag_query")
-def handle_rag_query(intent_result, user_message, **kwargs):
-    """处理RAG查询意图 - 从本地文件加载文档"""
-    rag_service = get_rag_service()
-    
-    # 检查是否有加载的文档
-    if rag_service.get_documents_count() == 0:
-        # 如果没有文档，降级为普通聊天
-        llm = get_llm_provider()
-        response = llm.chat([{"role": "user", "content": user_message}])
-        return {
-            "intent": "rag_query",
-            "response": response,
-            "use_rag": False,
-            "entities": intent_result.get("entities", []),
-            "confidence": intent_result.get("confidence", 0)
-        }
-    
-    # 使用本地文档进行 RAG 查询
-    response = rag_service.chat_with_context(user_message)
-    
-    return {
-        "intent": "rag_query",
-        "response": response,
-        "use_rag": True,
-        "entities": intent_result.get("entities", []),
-        "confidence": intent_result.get("confidence", 0)
-    }
-
-
-@intent_router.register("chat")
-def handle_chat(intent_result, user_message, **kwargs):
-    """处理普通聊天意图"""
-    llm = get_llm_provider()
-    messages = [{"role": "user", "content": user_message}]
-    response = llm.chat(messages)
-    
-    return {
-        "intent": "chat",
-        "response": response,
-        "use_rag": False,
-        "entities": intent_result.get("entities", []),
-        "confidence": intent_result.get("confidence", 0)
-    }
-
-
-@intent_router.register("unknown")
-def handle_unknown(intent_result, user_message, **kwargs):
-    """处理未知意图"""
-    llm = get_llm_provider()
-    messages = [{"role": "user", "content": user_message}]
-    response = llm.chat(messages)
-    
-    return {
-        "intent": "unknown",
-        "response": response,
-        "use_rag": False,
-        "entities": intent_result.get("entities", []),
-        "confidence": intent_result.get("confidence", 0)
-    }
-
-
-@router.post("/intent-chat")
-def intent_based_chat(
-    message: str,
-    conversation_id: int,
-    db: Session = Depends(get_db),
-    current_user: TokenData = Depends(get_current_user)
-):
-    """
-    基于意图识别的统一聊天接口
-    
-    根据用户输入自动识别意图，并路由到相应的处理逻辑：
-    - rag_query: 使用RAG查询文档
-    - chat: 普通聊天
-    - command: 命令执行
-    - unknown: 无法识别的意图
-    """
-    # 验证对话存在且属于当前用户
-    conversation = get_conversation_by_id(db, conversation_id)
-    if not conversation or conversation.user_id != current_user.user_id:
-        raise HTTPException(status_code=404, detail="对话不存在")
-    
-    # 1. 意图识别
-    intent_recognizer = get_intent_recognizer()
-    intent_result = intent_recognizer.recognize_intent(message)
-    
-    # 2. 根据意图路由处理
-    result = intent_router.route(
-        intent_result,
-        db=db,
-        user_message=message,
-        conversation_id=conversation_id
-    )
-    
-    # 3. 保存消息到数据库
-    create_message(db, conversation_id, "user", message)
-    create_message(db, conversation_id, "assistant", result.get("response", ""))
-    
-    return result
 
 
 @router.post("/intent-chat/stream")

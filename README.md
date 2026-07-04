@@ -156,7 +156,6 @@ START → entry_route ──(上轮在等追问)──► plan
 ### 意图识别聊天
 | 路由 | 方法 | 说明 |
 |------|------|------|
-| `/chat/intent-chat` | POST | 意图识别聊天 |
 | `/chat/intent-chat/stream` | POST | 流式意图聊天 |
 | `/chat/intent-test` | POST | 仅测试意图识别 |
 
@@ -197,7 +196,7 @@ START → entry_route ──(上轮在等追问)──► plan
 # 数据库
 DATABASE_URL=postgresql://postgres:123456@localhost:5432/chat
 
-# JWT 密钥（生产环境务必修改）
+# JWT 密钥
 SECRET_KEY=your-secret-key-change-in-production
 
 # 大模型配置
@@ -263,8 +262,3 @@ response = llm.chat([
     {"role": "user", "content": "你好"}
 ])
 ```
-
-## 已知问题
-
-- `api/intent_chat.py` 的 `intent_based_chat` 用裸 query 参数（`message: str, conversation_id: int`），与其他端点的 JSON body 风格不一致
-- `providers/base.py` 的 `bind_tools` 未声明为抽象方法，仅 SiliconFlowProvider 实现
